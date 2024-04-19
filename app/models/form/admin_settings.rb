@@ -11,6 +11,7 @@ class Form::AdminSettings
     site_title
     site_short_description
     site_extended_description
+    site_resources
     site_terms
     registrations_mode
     closed_registrations_message

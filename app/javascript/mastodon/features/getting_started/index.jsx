@@ -12,7 +12,6 @@ import { connect } from 'react-redux';
 import { fetchFollowRequests } from 'mastodon/actions/accounts';
 import Column from 'mastodon/components/column';
 import ColumnHeader from 'mastodon/components/column_header';
-import LinkFooter from 'mastodon/features/ui/components/link_footer';
 
 import { me, showTrends } from '../../initial_state';
 import NavigationContainer from '../compose/containers/navigation_container';
@@ -142,7 +141,6 @@ class GettingStarted extends ImmutablePureComponent {
 
           {!multiColumn && <div className='flex-spacer' />}
 
-          <LinkFooter multiColumn />
         </div>
 
         {(multiColumn && showTrends) && <TrendsContainer />}

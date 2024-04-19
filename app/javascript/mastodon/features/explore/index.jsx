@@ -10,6 +10,7 @@ import { connect } from 'react-redux';
 
 import Column from 'mastodon/components/column';
 import ColumnHeader from 'mastodon/components/column_header';
+import { NotSignedInIndicator } from 'mastodon/components/not_signed_in_indicator';
 import Search from 'mastodon/features/compose/containers/search_container';
 import { trendsEnabled } from 'mastodon/initial_state';
 
@@ -53,6 +54,7 @@ class Explore extends PureComponent {
   render() {
     const { intl, multiColumn, isSearching } = this.props;
     const { signedIn } = this.context.identity;
+    console.log(signedIn);
 
     return (
       <Column bindToDocument={!multiColumn} ref={this.setRef} label={intl.formatMessage(messages.title)}>
@@ -66,45 +68,43 @@ class Explore extends PureComponent {
         <div className='explore__search-header'>
           <Search />
         </div>
+        {signedIn ? (
+            isSearching ? (
+              <SearchResults />
+             ) : (
+              <>
+                <div className='account__section-headline'>
+                  <NavLink exact to='/explore'>
+                    <FormattedMessage tagName='div' id='explore.trending_statuses' defaultMessage='Posts' />
+                  </NavLink>
+                  <NavLink exact to='/explore/tags'>
+                    <FormattedMessage tagName='div' id='explore.trending_tags' defaultMessage='Hashtags' />
+                  </NavLink>
+                  <NavLink exact to='/explore/suggestions'>
+                    <FormattedMessage tagName='div' id='explore.suggested_follows' defaultMessage='People' />
+                  </NavLink>
 
-        {isSearching ? (
-          <SearchResults />
+                  <NavLink exact to='/explore/links'>
+                    <FormattedMessage tagName='div' id='explore.trending_links' defaultMessage='News' />
+                  </NavLink>
+                </div>
+                <Switch>
+                  <Route path='/explore/tags' component={Tags} />
+                  <Route path='/explore/links' component={Links} />
+                  <Route path='/explore/suggestions' component={Suggestions} />
+                  <Route exact path={['/explore', '/explore/posts', '/search']}>
+                    <Statuses multiColumn={multiColumn} />
+                  </Route>
+                </Switch>
+
+                <Helmet>
+                  <title>{intl.formatMessage(messages.title)}</title>
+                  <meta name='robots' content={isSearching ? 'noindex' : 'all'} />
+                </Helmet>
+              </>
+            )
         ) : (
-          <>
-            <div className='account__section-headline'>
-              <NavLink exact to='/explore'>
-                <FormattedMessage tagName='div' id='explore.trending_statuses' defaultMessage='Posts' />
-              </NavLink>
-
-              <NavLink exact to='/explore/tags'>
-                <FormattedMessage tagName='div' id='explore.trending_tags' defaultMessage='Hashtags' />
-              </NavLink>
-
-              {signedIn && (
-                <NavLink exact to='/explore/suggestions'>
-                  <FormattedMessage tagName='div' id='explore.suggested_follows' defaultMessage='People' />
-                </NavLink>
-              )}
-
-              <NavLink exact to='/explore/links'>
-                <FormattedMessage tagName='div' id='explore.trending_links' defaultMessage='News' />
-              </NavLink>
-            </div>
-
-            <Switch>
-              <Route path='/explore/tags' component={Tags} />
-              <Route path='/explore/links' component={Links} />
-              <Route path='/explore/suggestions' component={Suggestions} />
-              <Route exact path={['/explore', '/explore/posts', '/search']}>
-                <Statuses multiColumn={multiColumn} />
-              </Route>
-            </Switch>
-
-            <Helmet>
-              <title>{intl.formatMessage(messages.title)}</title>
-              <meta name='robots' content={isSearching ? 'noindex' : 'all'} />
-            </Helmet>
-          </>
+          <NotSignedInIndicator />
         )}
       </Column>
     );

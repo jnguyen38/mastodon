@@ -116,6 +116,7 @@ class Status extends ImmutablePureComponent {
       inUse: PropTypes.bool,
       available: PropTypes.bool,
     }),
+    hierarchy: PropTypes.string
   };
 
   // Avoid checking props that are functions (and whose equality will always
@@ -345,7 +346,7 @@ class Status extends ImmutablePureComponent {
   };
 
   render () {
-    const { intl, hidden, featured, unread, showThread, scrollKey, pictureInPicture, previousId, nextInReplyToId, rootId } = this.props;
+    const { intl, hidden, featured, unread, showThread, scrollKey, pictureInPicture, previousId, rootId } = this.props;
 
     let { status, account, ...other } = this.props;
 
@@ -382,7 +383,6 @@ class Status extends ImmutablePureComponent {
 
     const connectUp = previousId && previousId === status.get('in_reply_to_id');
     const connectToRoot = rootId && rootId === status.get('in_reply_to_id');
-    const connectReply = nextInReplyToId && nextInReplyToId === status.get('id');
     const matchedFilters = status.get('matched_filters');
 
     if (this.state.forceFilter === undefined ? matchedFilters : this.state.forceFilter) {
@@ -547,6 +547,9 @@ class Status extends ImmutablePureComponent {
 
     const {statusContentProps, hashtagBar} = getHashtagBarForStatus(status);
     const expanded = !status.get('hidden') || status.get('spoiler_text').length === 0;
+    const replies_count = Math.min(6, Math.max((parseInt(this.props.hierarchy,10)|| 0) - 1, 0));
+    const threadIndenting = `${replies_count*40}px`;
+
 
     return (
       <HotKeys handlers={handlers}>
@@ -554,40 +557,42 @@ class Status extends ImmutablePureComponent {
           {prepend}
 
           <div className={classNames('status', `status-${status.get('visibility')}`, { 'status-reply': !!status.get('in_reply_to_id'), 'status--in-thread': !!rootId, 'status--first-in-thread': previousId && (!connectUp || connectToRoot), muted: this.props.muted })} data-id={status.get('id')}>
-            {(connectReply || connectUp || connectToRoot) && <div className={classNames('status__line', { 'status__line--full': connectReply, 'status__line--first': !status.get('in_reply_to_id') && !connectToRoot })} />}
+  
 
             {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
-            <div onClick={this.handleClick} className='status__info'>
-              <a href={`/@${status.getIn(['account', 'acct'])}/${status.get('id')}`} className='status__relative-time' target='_blank' rel='noopener noreferrer'>
-                <span className='status__visibility-icon'><Icon id={visibilityIcon.icon} title={visibilityIcon.text} /></span>
-                <RelativeTimestamp timestamp={status.get('created_at')} />{status.get('edited_at') && <abbr title={intl.formatMessage(messages.edited, { date: intl.formatDate(status.get('edited_at'), { hour12: false, year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }) })}> *</abbr>}
-              </a>
+            <div style={{ marginLeft: threadIndenting}}>
+              <div onClick={this.handleClick} className='status__info'>
+                <a href={`/@${status.getIn(['account', 'acct'])}/${status.get('id')}`} className='status__relative-time' target='_blank' rel='noopener noreferrer'>
+                  <span className='status__visibility-icon'><Icon id={visibilityIcon.icon} title={visibilityIcon.text} /></span>
+                  <RelativeTimestamp timestamp={status.get('created_at')} />{status.get('edited_at') && <abbr title={intl.formatMessage(messages.edited, { date: intl.formatDate(status.get('edited_at'), { hour12: false, year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }) })}> *</abbr>}
+                </a>
 
-              <a onClick={this.handleAccountClick} href={`/@${status.getIn(['account', 'acct'])}`} title={status.getIn(['account', 'acct'])} className='status__display-name' target='_blank' rel='noopener noreferrer'>
-                <div className='status__avatar'>
-                  {statusAvatar}
-                </div>
+                <a onClick={this.handleAccountClick} href={`/@${status.getIn(['account', 'acct'])}`} title={status.getIn(['account', 'acct'])} className='status__display-name' target='_blank' rel='noopener noreferrer'>
+                  <div className='status__avatar'>
+                    {statusAvatar}
+                  </div>
 
-                <DisplayName account={status.get('account')} />
-              </a>
-            </div>
+                  <DisplayName account={status.get('account')} />
+                </a>
+              </div>
 
-            <StatusContent
-              status={status}
-              onClick={this.handleClick}
-              expanded={expanded}
-              onExpandedToggle={this.handleExpandedToggle}
-              onTranslate={this.handleTranslate}
-              collapsible
-              onCollapsedToggle={this.handleCollapsedToggle}
-              {...statusContentProps}
-            />
+              <StatusContent
+                status={status}
+                onClick={this.handleClick}
+                expanded={expanded}
+                onExpandedToggle={this.handleExpandedToggle}
+                onTranslate={this.handleTranslate}
+                collapsible
+                onCollapsedToggle={this.handleCollapsedToggle}
+                {...statusContentProps}
+              />
 
-            {media}
+              {media}
 
-            {expanded && hashtagBar}
+              {expanded && hashtagBar}
 
-            <StatusActionBar scrollKey={scrollKey} status={status} account={account} onFilter={matchedFilters ? this.handleFilterClick : null} {...other} />
+              <StatusActionBar scrollKey={scrollKey} status={status} account={account} onFilter={matchedFilters ? this.handleFilterClick : null} {...other} />
+              </div>
           </div>
         </div>
       </HotKeys>

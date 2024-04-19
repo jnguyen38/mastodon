@@ -14,6 +14,10 @@ export const EXTENDED_DESCRIPTION_REQUEST = 'EXTENDED_DESCRIPTION_REQUEST';
 export const EXTENDED_DESCRIPTION_SUCCESS = 'EXTENDED_DESCRIPTION_SUCCESS';
 export const EXTENDED_DESCRIPTION_FAIL    = 'EXTENDED_DESCRIPTION_FAIL';
 
+export const RESOURCES_REQUEST = 'RESOURCES_REQUEST';
+export const RESOURCES_SUCCESS = 'RESOURCES_SUCCESS';
+export const RESOURCES_FAIL    = 'RESOURCES_FAIL';
+
 export const SERVER_DOMAIN_BLOCKS_FETCH_REQUEST = 'SERVER_DOMAIN_BLOCKS_FETCH_REQUEST';
 export const SERVER_DOMAIN_BLOCKS_FETCH_SUCCESS = 'SERVER_DOMAIN_BLOCKS_FETCH_SUCCESS';
 export const SERVER_DOMAIN_BLOCKS_FETCH_FAIL    = 'SERVER_DOMAIN_BLOCKS_FETCH_FAIL';
@@ -93,6 +97,34 @@ const fetchExtendedDescriptionSuccess = description => ({
 
 const fetchExtendedDescriptionFail = error => ({
   type: EXTENDED_DESCRIPTION_FAIL,
+  error,
+});
+
+
+export const fetchResources = () => (dispatch, getState) => {
+  if (getState().getIn(['server', 'resources', 'isLoading'])) {
+    return;
+  }
+
+  dispatch(fetchResourcesRequest());
+
+  api(getState)
+    .get('/api/v1/instance/resources')
+    .then(({ data }) => dispatch(fetchResourcesSuccess(data)))
+    .catch(err => dispatch(fetchResourcesFail(err)));
+};
+
+const fetchResourcesRequest = () => ({
+  type: RESOURCES_REQUEST,
+});
+
+const fetchResourcesSuccess = description => ({
+  type: RESOURCES_SUCCESS,
+  description,
+});
+
+const fetchResourcesFail = error => ({
+  type: RESOURCES_FAIL,
   error,
 });
 

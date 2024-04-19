@@ -90,15 +90,19 @@ const makeMapStateToProps = () => {
     (_, { id }) => id,
     state => state.getIn(['contexts', 'inReplyTos']),
   ], (statusId, inReplyTos) => {
-    let ancestorsIds = Immutable.List();
-    ancestorsIds = ancestorsIds.withMutations(mutable => {
-      let id = statusId;
 
-      while (id && !mutable.includes(id)) {
-        mutable.unshift(id);
-        id = inReplyTos.get(id);
-      }
-    });
+    let ancestorsIds = [];
+  
+    let id = statusId;
+
+    while (id && !ancestorsIds.some(item => item.id === id)) {
+      ancestorsIds.unshift({ id: id, hierarchy: 0 });
+      id = inReplyTos.get(id);
+    }
+
+    ancestorsIds = Immutable.List(ancestorsIds); // Convert to Immutable List
+
+    console.log(ancestorsIds);
 
     return ancestorsIds;
   });
@@ -109,29 +113,29 @@ const makeMapStateToProps = () => {
     state => state.get('statuses'),
   ], (statusId, contextReplies, statuses) => {
     let descendantsIds = [];
-    const ids = [statusId];
+    const ids = [{id: statusId, hierarchy: 0}];
 
     while (ids.length > 0) {
-      let id        = ids.pop();
+      let {id, hierarchy}  = ids.pop();
       const replies = contextReplies.get(id);
 
       if (statusId !== id) {
-        descendantsIds.push(id);
+        descendantsIds.push({id: id, hierarchy: hierarchy});
       }
 
       if (replies) {
         replies.reverse().forEach(reply => {
-          if (!ids.includes(reply) && !descendantsIds.includes(reply) && statusId !== reply) ids.push(reply);
+          if (!ids.includes(reply) && !descendantsIds.includes(reply) && statusId !== reply) ids.push({id: reply, hierarchy: hierarchy + 1});
         });
       }
     }
 
-    let insertAt = descendantsIds.findIndex((id) => statuses.get(id).get('in_reply_to_account_id') !== statuses.get(id).get('account'));
+    let insertAt = descendantsIds.findIndex(item => statuses.getIn([item.id, 'in_reply_to_account_id']) !== statuses.getIn([item.id, 'account']));
     if (insertAt !== -1) {
-      descendantsIds.forEach((id, idx) => {
-        if (idx > insertAt && statuses.get(id).get('in_reply_to_account_id') === statuses.get(id).get('account')) {
+      descendantsIds.forEach((item, idx) => {
+        if (idx > insertAt && statuses.getIn([item.id, 'in_reply_to_account_id']) === statuses.getIn([item.id, 'account'])) {
           descendantsIds.splice(idx, 1);
-          descendantsIds.splice(insertAt, 0, id);
+          descendantsIds.splice(insertAt, 0, item);
           insertAt += 1;
         }
       });
@@ -563,7 +567,7 @@ class Status extends ImmutablePureComponent {
   renderChildren (list, ancestors) {
     const { params: { statusId } } = this.props;
 
-    return list.map((id, i) => (
+    return list.map(({id, hierarchy}, i) => (
       <StatusContainer
         key={id}
         id={id}
@@ -573,9 +577,11 @@ class Status extends ImmutablePureComponent {
         previousId={i > 0 ? list.get(i - 1) : undefined}
         nextId={list.get(i + 1) || (ancestors && statusId)}
         rootId={statusId}
+        hierarchy={hierarchy}
       />
     ));
   }
+  
 
   setRef = c => {
     this.node = c;

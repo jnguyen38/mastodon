@@ -124,6 +124,7 @@ namespace :api, format: false do
       resources :domain_blocks, only: [:index], controller: 'instances/domain_blocks'
       resource :privacy_policy, only: [:show], controller: 'instances/privacy_policies'
       resource :extended_description, only: [:show], controller: 'instances/extended_descriptions'
+      resource :resources, only: [:show], controller: 'instances/resources'
       resource :translation_languages, only: [:show], controller: 'instances/translation_languages'
       resource :languages, only: [:show], controller: 'instances/languages'
       resource :activity, only: [:show], controller: 'instances/activity'
