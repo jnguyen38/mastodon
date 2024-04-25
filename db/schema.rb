@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_09_07_150100) do
+ActiveRecord::Schema[7.0].define(version: 2024_01_11_033014) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -474,6 +474,15 @@ ActiveRecord::Schema[7.0].define(version: 2023_09_07_150100) do
     t.index ["tag_id"], name: "index_featured_tags_on_tag_id"
   end
 
+  create_table "follow_recommendation_mutes", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "target_account_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "target_account_id"], name: "idx_on_account_id_target_account_id_a8c8ddf44e", unique: true
+    t.index ["target_account_id"], name: "index_follow_recommendation_mutes_on_target_account_id"
+  end
+
   create_table "follow_recommendation_suppressions", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
@@ -504,6 +513,17 @@ ActiveRecord::Schema[7.0].define(version: 2023_09_07_150100) do
     t.string "languages", array: true
     t.index ["account_id", "target_account_id"], name: "index_follows_on_account_id_and_target_account_id", unique: true
     t.index ["target_account_id"], name: "index_follows_on_target_account_id"
+  end
+
+  create_table "generated_annual_reports", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.integer "year", null: false
+    t.jsonb "data", null: false
+    t.integer "schema_version", null: false
+    t.datetime "viewed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "year"], name: "index_generated_annual_reports_on_account_id_and_year", unique: true
   end
 
   create_table "identities", force: :cascade do |t|
@@ -1078,6 +1098,8 @@ ActiveRecord::Schema[7.0].define(version: 2023_09_07_150100) do
     t.datetime "last_sign_in_at", precision: nil
     t.boolean "admin", default: false, null: false
     t.string "confirmation_token"
+    t.datetime "phone_confirmed_at", precision: nil
+    t.datetime "phone_confirmation_sent_at", precision: nil
     t.datetime "confirmed_at", precision: nil
     t.datetime "confirmation_sent_at", precision: nil
     t.string "unconfirmed_email"

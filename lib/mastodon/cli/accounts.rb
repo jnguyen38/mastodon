@@ -45,6 +45,7 @@ module Mastodon::CLI
     end
 
     option :email, required: true
+    option :phone, required: true
     option :confirmed, type: :boolean
     option :role
     option :reattach, type: :boolean

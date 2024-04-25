@@ -1,0 +1,24 @@
+- content_for :page_title do
+  = t('auth.setup.title')
+
+= javascript_pack_tag 'sign_up', crossorigin: 'anonymous'
+
+= simple_form_for(@user, url: auth_phone_setup_path) do |f|
+  = render 'auth/shared/progress', stage: 'phone'
+
+  %h1.title= "Check your phone number"
+  %p.lead= t('auth.setup.phone_settings_hint_html', phone: content_tag(:strong, @user.phone))
+
+  = render 'shared/error_messages', object: @user
+
+  %p.lead
+    %strong= t('auth.setup.code_not_received')
+  %p.lead= t('auth.setup.phone_below_hint_html')
+
+  .fields-group
+    = f.input :phone, required: true, hint: false, input_html: { 'aria-label': "Phone number", autocomplete: 'off' }
+
+  .actions
+    = f.button :button, "RESEND CODE", type: :submit, class: 'button timer-button', disabled: true
+
+.form-footer= render 'auth/shared/links'
