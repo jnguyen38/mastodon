@@ -587,7 +587,12 @@ class Status extends ImmutablePureComponent {
       showMoreId: [...prevState.showMoreId, ...idsInclude]
     }));
   };
-
+  
+  handleShowMoreClickWrapper = (idsInclude) => {
+    return () => {
+      this.handleShowMoreClick(idsInclude);
+    };
+  };
 
   renderDescendants = (list) => {
     const { params: { statusId } } = this.props;
@@ -615,6 +620,12 @@ class Status extends ImmutablePureComponent {
         renderedShowMore += 1;
       }
 
+      const showMoreElement = renderedShowMore === 1 ? (
+        <div key={`show_more-${id}`} onClick={this.handleShowMoreClickWrapper(idsInclude)} className='detailed-status__action-bar status__content__text ' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize:'115%', cursor: 'pointer' }}>
+          <span>Show more replies</span>
+        </div>
+      ) : null;
+
       return (
         hierarchy2Count <= 5 || (this.state.showMoreList && this.state.showMoreId.some(item => item.id === id)) ?(
         <StatusContainer
@@ -628,12 +639,7 @@ class Status extends ImmutablePureComponent {
           rootId={statusId}
           hierarchy={hierarchy}
         />
-        ) : ( renderedShowMore === 1 ? (
-            <div key={`show_more-${id}`} onClick={this.handleShowMoreClick(idsInclude)} className='detailed-status__action-bar status__content__text ' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize:'115%', cursor: 'pointer' }}>
-              <span>Show more replies</span>
-            </div>
-          ) : null
-        )
+        ) : showMoreElement
       )
     });
     
