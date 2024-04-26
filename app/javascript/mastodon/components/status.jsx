@@ -116,7 +116,7 @@ class Status extends ImmutablePureComponent {
       inUse: PropTypes.bool,
       available: PropTypes.bool,
     }),
-    hierarchy: PropTypes.string
+    hierarchy: PropTypes.number
   };
 
   // Avoid checking props that are functions (and whose equality will always
@@ -547,7 +547,7 @@ class Status extends ImmutablePureComponent {
 
     const {statusContentProps, hashtagBar} = getHashtagBarForStatus(status);
     const expanded = !status.get('hidden') || status.get('spoiler_text').length === 0;
-    const replies_count = Math.min(6, Math.max((parseInt(this.props.hierarchy,10)|| 0) - 1, 0));
+    const replies_count = Math.min(6, Math.max((this.props.hierarchy||0) - 1, 0));
     const threadIndenting = `${replies_count*40}px`;
 
 

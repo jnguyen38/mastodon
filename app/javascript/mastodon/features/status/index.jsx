@@ -101,9 +101,6 @@ const makeMapStateToProps = () => {
     }
 
     ancestorsIds = Immutable.List(ancestorsIds); // Convert to Immutable List
-
-    console.log(ancestorsIds);
-
     return ancestorsIds;
   });
 
@@ -125,7 +122,7 @@ const makeMapStateToProps = () => {
 
       if (replies) {
         replies.reverse().forEach(reply => {
-          if (!ids.includes(reply) && !descendantsIds.includes(reply) && statusId !== reply) ids.push({id: reply, hierarchy: hierarchy + 1});
+          if (!ids.includes(reply) && !descendantsIds.includes(reply) && statusId !== reply && hierarchy < 2) ids.push({id: reply, hierarchy: hierarchy + 1});
         });
       }
     }
@@ -216,6 +213,8 @@ class Status extends ImmutablePureComponent {
     fullscreen: false,
     showMedia: defaultMediaVisibility(this.props.status),
     loadedStatusId: undefined,
+    showMoreList: false,
+    showMoreId: [],
   };
 
   UNSAFE_componentWillMount () {
@@ -563,8 +562,8 @@ class Status extends ImmutablePureComponent {
       element.focus();
     }
   }
-
-  renderChildren (list, ancestors) {
+  
+  renderAncestors (list) {
     const { params: { statusId } } = this.props;
 
     return list.map(({id, hierarchy}, i) => (
@@ -575,12 +574,71 @@ class Status extends ImmutablePureComponent {
         onMoveDown={this.handleMoveDown}
         contextType='thread'
         previousId={i > 0 ? list.get(i - 1) : undefined}
-        nextId={list.get(i + 1) || (ancestors && statusId)}
+        nextId={list.get(i + 1) || (statusId)}
         rootId={statusId}
         hierarchy={hierarchy}
       />
     ));
   }
+
+  handleShowMoreClick = (idsInclude) => {
+    this.setState(prevState => ({
+      showMoreList: true,
+      showMoreId: [...prevState.showMoreId, ...idsInclude]
+    }));
+  };
+
+
+  renderDescendants = (list) => {
+    const { params: { statusId } } = this.props;
+    
+    let hierarchy2Count = 0;
+    let renderedShowMore = 0;
+
+
+    return list.map(({id, hierarchy}, i) => {
+
+      if (hierarchy === 1) {
+        hierarchy2Count = 0;
+        renderedShowMore = 0;
+      }
+      else if (hierarchy === 2) {
+        hierarchy2Count += 1;
+      }
+
+      
+      const nextHierarchy1Index = list.findIndex((entry, index) => index > i-1 && entry.hierarchy === 1);
+      const endIndex = nextHierarchy1Index === -1 ? list.size : nextHierarchy1Index;
+      let idsInclude = list.slice(i, endIndex);
+
+      if (hierarchy2Count > 5){ 
+        renderedShowMore += 1;
+      }
+
+      return (
+        hierarchy2Count <= 5 || (this.state.showMoreList && this.state.showMoreId.some(item => item.id === id)) ?(
+        <StatusContainer
+          key={`descendant-${id}`}
+          id={id}
+          onMoveUp={this.handleMoveUp}
+          onMoveDown={this.handleMoveDown}
+          contextType='thread'
+          previousId={i > 0 ? list.get(i-1) : undefined}
+          nextId={list.get(i + 1) || false}
+          rootId={statusId}
+          hierarchy={hierarchy}
+        />
+        ) : ( renderedShowMore === 1 ? (
+            <div key={`show_more-${id}`} onClick={this.handleShowMoreClick(idsInclude)} className='detailed-status__action-bar status__content__text ' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize:'115%', cursor: 'pointer' }}>
+              <span>Show more replies</span>
+            </div>
+          ) : null
+        )
+      )
+    });
+    
+  }
+
   
 
   setRef = c => {
@@ -659,11 +717,11 @@ class Status extends ImmutablePureComponent {
     }
 
     if (ancestorsIds && ancestorsIds.size > 0) {
-      ancestors = <>{this.renderChildren(ancestorsIds, true)}</>;
+      ancestors = this.renderAncestors(ancestorsIds);
     }
 
     if (descendantsIds && descendantsIds.size > 0) {
-      descendants = <>{this.renderChildren(descendantsIds)}</>;
+      descendants = this.renderDescendants(descendantsIds);
     }
 
     const isLocal = status.getIn(['account', 'acct'], '').indexOf('@') === -1;
