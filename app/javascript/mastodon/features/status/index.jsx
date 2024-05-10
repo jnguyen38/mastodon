@@ -90,16 +90,17 @@ const makeMapStateToProps = () => {
     (_, { id }) => id,
     state => state.getIn(['contexts', 'inReplyTos']),
   ], (statusId, inReplyTos) => {
-    let ancestorsIds = Immutable.List();
-    ancestorsIds = ancestorsIds.withMutations(mutable => {
-      let id = statusId;
 
-      while (id && !mutable.includes(id)) {
-        mutable.unshift(id);
-        id = inReplyTos.get(id);
-      }
-    });
+    let ancestorsIds = [];
+  
+    let id = statusId;
 
+    while (id && !ancestorsIds.some(item => item.id === id)) {
+      ancestorsIds.unshift({ id: id, hierarchy: 0 });
+      id = inReplyTos.get(id);
+    }
+
+    ancestorsIds = Immutable.List(ancestorsIds); // Convert to Immutable List
     return ancestorsIds;
   });
 
@@ -109,29 +110,29 @@ const makeMapStateToProps = () => {
     state => state.get('statuses'),
   ], (statusId, contextReplies, statuses) => {
     let descendantsIds = [];
-    const ids = [statusId];
+    const ids = [{id: statusId, hierarchy: 0}];
 
     while (ids.length > 0) {
-      let id        = ids.pop();
+      let {id, hierarchy}  = ids.pop();
       const replies = contextReplies.get(id);
 
       if (statusId !== id) {
-        descendantsIds.push(id);
+        descendantsIds.push({id: id, hierarchy: hierarchy});
       }
 
       if (replies) {
         replies.reverse().forEach(reply => {
-          if (!ids.includes(reply) && !descendantsIds.includes(reply) && statusId !== reply) ids.push(reply);
+          if (!ids.includes(reply) && !descendantsIds.includes(reply) && statusId !== reply && hierarchy < 2) ids.push({id: reply, hierarchy: hierarchy + 1});
         });
       }
     }
 
-    let insertAt = descendantsIds.findIndex((id) => statuses.get(id).get('in_reply_to_account_id') !== statuses.get(id).get('account'));
+    let insertAt = descendantsIds.findIndex(item => statuses.getIn([item.id, 'in_reply_to_account_id']) !== statuses.getIn([item.id, 'account']));
     if (insertAt !== -1) {
-      descendantsIds.forEach((id, idx) => {
-        if (idx > insertAt && statuses.get(id).get('in_reply_to_account_id') === statuses.get(id).get('account')) {
+      descendantsIds.forEach((item, idx) => {
+        if (idx > insertAt && statuses.getIn([item.id, 'in_reply_to_account_id']) === statuses.getIn([item.id, 'account'])) {
           descendantsIds.splice(idx, 1);
-          descendantsIds.splice(insertAt, 0, id);
+          descendantsIds.splice(insertAt, 0, item);
           insertAt += 1;
         }
       });
@@ -212,6 +213,8 @@ class Status extends ImmutablePureComponent {
     fullscreen: false,
     showMedia: defaultMediaVisibility(this.props.status),
     loadedStatusId: undefined,
+    showMoreList: false,
+    showMoreId: [],
   };
 
   UNSAFE_componentWillMount () {
@@ -559,11 +562,11 @@ class Status extends ImmutablePureComponent {
       element.focus();
     }
   }
-
-  renderChildren (list, ancestors) {
+  
+  renderAncestors (list) {
     const { params: { statusId } } = this.props;
 
-    return list.map((id, i) => (
+    return list.map(({id, hierarchy}, i) => (
       <StatusContainer
         key={id}
         id={id}
@@ -571,11 +574,78 @@ class Status extends ImmutablePureComponent {
         onMoveDown={this.handleMoveDown}
         contextType='thread'
         previousId={i > 0 ? list.get(i - 1) : undefined}
-        nextId={list.get(i + 1) || (ancestors && statusId)}
+        nextId={list.get(i + 1) || (statusId)}
         rootId={statusId}
+        hierarchy={hierarchy}
       />
     ));
   }
+
+  handleShowMoreClick = (idsInclude) => {
+    this.setState(prevState => ({
+      showMoreList: true,
+      showMoreId: [...prevState.showMoreId, ...idsInclude]
+    }));
+  };
+  
+  handleShowMoreClickWrapper = (idsInclude) => {
+    return () => {
+      this.handleShowMoreClick(idsInclude);
+    };
+  };
+
+  renderDescendants = (list) => {
+    const { params: { statusId } } = this.props;
+    
+    let hierarchy2Count = 0;
+    let renderedShowMore = 0;
+
+
+    return list.map(({id, hierarchy}, i) => {
+
+      if (hierarchy === 1) {
+        hierarchy2Count = 0;
+        renderedShowMore = 0;
+      }
+      else if (hierarchy === 2) {
+        hierarchy2Count += 1;
+      }
+
+      
+      const nextHierarchy1Index = list.findIndex((entry, index) => index > i-1 && entry.hierarchy === 1);
+      const endIndex = nextHierarchy1Index === -1 ? list.size : nextHierarchy1Index;
+      let idsInclude = list.slice(i, endIndex);
+
+      if (hierarchy2Count > 5){ 
+        renderedShowMore += 1;
+      }
+
+      const showMoreElement = renderedShowMore === 1 ? (
+        <div key={`show_more-${id}`} onClick={this.handleShowMoreClickWrapper(idsInclude)} className='detailed-status__action-bar status__content__text ' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize:'115%', cursor: 'pointer' }}>
+          <span>Show more replies</span>
+        </div>
+      ) : null;
+
+      return (
+        hierarchy2Count <= 5 || (this.state.showMoreList && this.state.showMoreId.some(item => item.id === id)) ?(
+        <StatusContainer
+          key={`descendant-${id}`}
+          id={id}
+          onMoveUp={this.handleMoveUp}
+          onMoveDown={this.handleMoveDown}
+          contextType='thread'
+          previousId={i > 0 ? list.get(i-1) : undefined}
+          nextId={list.get(i + 1) || false}
+          rootId={statusId}
+          hierarchy={hierarchy}
+        />
+        ) : showMoreElement
+      )
+    });
+    
+  }
+
+  
 
   setRef = c => {
     this.node = c;
@@ -653,11 +723,11 @@ class Status extends ImmutablePureComponent {
     }
 
     if (ancestorsIds && ancestorsIds.size > 0) {
-      ancestors = <>{this.renderChildren(ancestorsIds, true)}</>;
+      ancestors = this.renderAncestors(ancestorsIds);
     }
 
     if (descendantsIds && descendantsIds.size > 0) {
-      descendants = <>{this.renderChildren(descendantsIds)}</>;
+      descendants = this.renderDescendants(descendantsIds);
     }
 
     const isLocal = status.getIn(['account', 'acct'], '').indexOf('@') === -1;

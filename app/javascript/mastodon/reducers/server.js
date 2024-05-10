@@ -10,6 +10,9 @@ import {
   EXTENDED_DESCRIPTION_REQUEST,
   EXTENDED_DESCRIPTION_SUCCESS,
   EXTENDED_DESCRIPTION_FAIL,
+  RESOURCES_REQUEST,
+  RESOURCES_SUCCESS,
+  RESOURCES_FAIL,
   SERVER_DOMAIN_BLOCKS_FETCH_REQUEST,
   SERVER_DOMAIN_BLOCKS_FETCH_SUCCESS,
   SERVER_DOMAIN_BLOCKS_FETCH_FAIL,
@@ -21,6 +24,10 @@ const initialState = ImmutableMap({
   }),
 
   extendedDescription: ImmutableMap({
+    isLoading: false,
+  }),
+
+  resources: ImmutableMap({
     isLoading: false,
   }),
 
@@ -51,6 +58,12 @@ export default function server(state = initialState, action) {
     return state.set('extendedDescription', fromJS(action.description)).setIn(['extendedDescription', 'isLoading'], false);
   case EXTENDED_DESCRIPTION_FAIL:
     return state.setIn(['extendedDescription', 'isLoading'], false);
+  case RESOURCES_REQUEST:
+    return state.setIn(['resources', 'isLoading'], true);
+  case RESOURCES_SUCCESS:
+    return state.set('resources', fromJS(action.description)).setIn(['resources', 'isLoading'], false);
+  case RESOURCES_FAIL:
+    return state.setIn(['resources', 'isLoading'], false);
   case SERVER_DOMAIN_BLOCKS_FETCH_REQUEST:
     return state.setIn(['domainBlocks', 'isLoading'], true);
   case SERVER_DOMAIN_BLOCKS_FETCH_SUCCESS:

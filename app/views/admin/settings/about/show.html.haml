@@ -13,6 +13,8 @@
   .fields-group
     = f.input :site_extended_description, wrapper: :with_block_label, as: :text, input_html: { rows: 8 }
 
+    = f.input :site_resources, wrapper: :with_block_label, as: :text, input_html: { rows: 8 }
+
     %p.hint
       = t 'admin.settings.about.rules_hint'
       = link_to t('admin.settings.about.manage_rules'), admin_rules_path

@@ -30,6 +30,10 @@ class InstancePresenter < ActiveModelSerializers::Model
     Setting.site_extended_description
   end
 
+  def resources
+    Setting.site_resources
+  end
+
   def status_page_url
     Setting.status_page_url
   end

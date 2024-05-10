@@ -31,6 +31,19 @@ describe InstancePresenter do
     end
   end
 
+  describe '#resources' do
+    around do |example|
+      site_resources = Setting.site_resources
+      example.run
+      Setting.site_resources = site_resources
+    end
+
+    it 'delegates site_resources to Setting' do
+      Setting.site_resources = 'Resources'
+      expect(instance_presenter.resources).to eq 'Resources'
+    end
+  end
+
   describe '#email' do
     around do |example|
       site_contact_email = Setting.site_contact_email

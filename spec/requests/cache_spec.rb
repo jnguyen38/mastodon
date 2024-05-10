@@ -13,6 +13,7 @@ module TestEndpoints
     /custom.css
     /actor
     /api/v1/instance/extended_description
+    /api/v1/instance/resources
     /api/v1/instance/rules
     /api/v1/instance/peers
     /api/v1/instance
@@ -23,7 +24,6 @@ module TestEndpoints
   # on Cookie to prevent logged-in users from getting values from logged-out cache.
   COOKIE_DEPENDENT_CACHABLE = %w(
     /
-    /explore
     /public
     /about
     /privacy-policy
@@ -64,6 +64,8 @@ module TestEndpoints
     /auth/edit
     /oauth/authorized_applications
     /admin/dashboard
+    /explore/
+
   ).freeze
 
   # API endpoints only available to logged-in users.

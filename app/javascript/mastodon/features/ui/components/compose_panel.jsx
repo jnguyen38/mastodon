@@ -9,7 +9,6 @@ import ComposeFormContainer from 'mastodon/features/compose/containers/compose_f
 import NavigationContainer from 'mastodon/features/compose/containers/navigation_container';
 import SearchContainer from 'mastodon/features/compose/containers/search_container';
 
-import LinkFooter from './link_footer';
 
 class ComposePanel extends PureComponent {
 
@@ -62,7 +61,6 @@ class ComposePanel extends PureComponent {
           </>
         )}
 
-        <LinkFooter />
       </div>
     );
   }
