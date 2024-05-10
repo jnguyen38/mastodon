@@ -25,7 +25,7 @@ class UserSettings
     setting :trends, default: true
     setting :use_blurhash, default: true
     setting :use_pending_items, default: false
-    setting :use_system_font, default: false
+    setting :use_system_font, default: true
     setting :disable_swiping, default: false
     setting :delete_modal, default: true
     setting :reblog_modal, default: false
@@ -34,6 +34,7 @@ class UserSettings
     setting :expand_content_warnings, default: false
     setting :display_media, default: 'default', in: %w(default show_all hide_all)
     setting :auto_play, default: false
+    setting :crop_images, default: true
   end
 
   namespace :notification_emails do
