@@ -1,4 +1,4 @@
-- progress_index = { rules: 0, details: 1, confirm: 2, phone: 3, enable: 4 }[stage.to_sym]
+- progress_index = { rules: 0, details: 1, confirm: 2}[stage.to_sym]
 
 %ol.progress-tracker
   %li{ class: progress_index.positive? ? 'completed' : 'active' }
@@ -22,12 +22,6 @@
   %li{ class: [progress_index > 3 && 'completed', progress_index == 3 && 'active'] }
     .circle
       - if progress_index > 3
-        = check_icon
-    .label= "Confirm phone"
-  %li.separator{ class: progress_index > 3 ? 'completed' : nil }
-  %li{ class: [progress_index > 4 && 'completed', progress_index == 4 && 'active'] }
-    .circle
-      - if progress_index > 4
         = check_icon
     .label= "Enable 2FA"
   - if approved_registrations?

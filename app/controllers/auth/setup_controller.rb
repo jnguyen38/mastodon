@@ -19,7 +19,7 @@ class Auth::SetupController < ApplicationController
 
     if @user.update(user_params)
       @user.resend_confirmation_instructions unless @user.confirmed?
-      redirect_to auth_phone_setup_path, notice: I18n.t('auth.setup.new_confirmation_instructions_sent')
+      redirect_to auth_setup_path, notice: I18n.t('auth.setup.new_confirmation_instructions_sent')
     else
       render :show
     end
@@ -28,7 +28,7 @@ class Auth::SetupController < ApplicationController
   private
 
   def require_unconfirmed_or_pending!
-    redirect_to auth_phone_setup_path if current_user.confirmed? && current_user.approved?
+    redirect_to root_path if current_user.confirmed? && current_user.approved?
   end
 
   def set_user
