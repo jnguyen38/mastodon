@@ -42,6 +42,8 @@ class ApplicationController < ActionController::Base
   before_action :store_referrer, except: :raise_not_found, if: :devise_controller?
   before_action :require_functional!, if: :user_signed_in?
 
+  before_action :check_2fa
+
   before_action :set_cache_control_defaults
 
   skip_before_action :verify_authenticity_token, only: :raise_not_found
@@ -54,6 +56,18 @@ class ApplicationController < ActionController::Base
 
   def public_fetch_mode?
     !authorized_fetch_mode?
+  end
+
+  def check_2fa
+    return unless current_user
+
+    if current_user.confirmed? && !current_user.two_factor_enabled? && !on_otp_authentication_page?
+      redirect_to settings_otp_authentication_path, alert: 'You must enable 2FA to continue.'
+    end
+  end
+
+  def on_otp_authentication_page?
+    request.path == settings_otp_authentication_path || request.path == destroy_user_session_path
   end
 
   def store_referrer

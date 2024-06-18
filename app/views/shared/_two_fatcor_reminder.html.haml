@@ -1,0 +1,5 @@
+# app/views/shared/_two_factor_reminder.html.haml
+- if current_user && !current_user.two_factor_enabled?
+  .alert.alert-warning
+    %p You must enable 2FA to use other features. 
+    = link_to 'Enable 2FA', settings_otp_authentication_path, class: 'btn btn-primary'
