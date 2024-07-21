@@ -58,7 +58,7 @@ class ApplicationController < ActionController::Base
     !authorized_fetch_mode?
   end
 
-   def check_2fa
+  def check_2fa
     return unless current_user
 
     if current_user.confirmed? && !current_user.two_factor_enabled? && !on_otp_authentication_page?
@@ -70,7 +70,8 @@ class ApplicationController < ActionController::Base
     paths_to_exclude = [
       settings_otp_authentication_path,
       destroy_user_session_path,
-      new_settings_two_factor_authentication_confirmation_path 
+      new_settings_two_factor_authentication_confirmation_path,
+      settings_two_factor_authentication_confirmation_path
     ]
     paths_to_exclude.include?(request.path)
   end
